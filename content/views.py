@@ -1,5 +1,5 @@
 from rest_framework import generics, filters, status
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
+from rest_framework.permissions import AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -17,6 +17,7 @@ from .serializers import (
     AnnouncementWriteSerializer,
     apply_lang_filter,
 )
+from accounts.permissions import IsAdminOrReadOnly
 
 # ─── Swagger parametrlar ─────────────────────────────────────────────────────
 
@@ -49,7 +50,7 @@ class ContentPagination(PageNumberPagination):
 # ─────────────────────────────────────────────────────────────────────────────
 
 class NewsListCreateAPIView(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly]
     pagination_class = ContentPagination
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -64,7 +65,14 @@ class NewsListCreateAPIView(generics.ListCreateAPIView):
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False):
             return News.objects.none()
-        return News.objects.select_related('created_by').all()
+        qs = News.objects.select_related('created_by').all()
+        user = self.request.user
+        if not (user.is_authenticated and user.has_admin_access()):
+            qs = qs.filter(
+                status=News.Status.PUBLISHED,
+                published_at__lte=timezone.now(),
+            )
+        return qs
 
     def get_serializer_class(self):
         if getattr(self, 'swagger_fake_view', False):
@@ -138,14 +146,21 @@ class NewsListCreateAPIView(generics.ListCreateAPIView):
 
 
 class NewsDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     lookup_field = 'slug'
 
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False):
             return News.objects.none()
-        return News.objects.select_related('created_by').all()
+        qs = News.objects.select_related('created_by').all()
+        user = self.request.user
+        if not (user.is_authenticated and user.has_admin_access()):
+            qs = qs.filter(
+                status=News.Status.PUBLISHED,
+                published_at__lte=timezone.now(),
+            )
+        return qs
 
     def get_serializer_class(self):
         if getattr(self, 'swagger_fake_view', False):
@@ -254,7 +269,7 @@ class NewsDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 # ─────────────────────────────────────────────────────────────────────────────
 
 class AnnouncementListCreateAPIView(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly]
     pagination_class = ContentPagination
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -270,6 +285,14 @@ class AnnouncementListCreateAPIView(generics.ListCreateAPIView):
         if getattr(self, 'swagger_fake_view', False):
             return Announcement.objects.none()
         qs = Announcement.objects.select_related('created_by').all()
+        user = self.request.user
+        if not (user.is_authenticated and user.has_admin_access()):
+            qs = qs.filter(
+                status=Announcement.Status.PUBLISHED,
+                published_at__lte=timezone.now(),
+            ).filter(
+                Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())
+            )
         if self.request.query_params.get('active_only', '').lower() == 'true':
             qs = qs.filter(
                 Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())
@@ -349,14 +372,23 @@ class AnnouncementListCreateAPIView(generics.ListCreateAPIView):
 
 
 class AnnouncementDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     lookup_field = 'slug'
 
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False):
             return Announcement.objects.none()
-        return Announcement.objects.select_related('created_by').all()
+        qs = Announcement.objects.select_related('created_by').all()
+        user = self.request.user
+        if not (user.is_authenticated and user.has_admin_access()):
+            qs = qs.filter(
+                status=Announcement.Status.PUBLISHED,
+                published_at__lte=timezone.now(),
+            ).filter(
+                Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())
+            )
+        return qs
 
     def get_serializer_class(self):
         if getattr(self, 'swagger_fake_view', False):

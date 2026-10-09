@@ -7,7 +7,7 @@ class IsAdminUser(BasePermission):
         return (
             request.user and 
             request.user.is_authenticated and 
-            request.user.is_admin_role()
+            request.user.has_admin_access()
         )
 
 
@@ -20,5 +20,5 @@ class IsAdminOrReadOnly(BasePermission):
         return (
             request.user and 
             request.user.is_authenticated and 
-            request.user.is_admin_role()
+            request.user.has_admin_access()
         )

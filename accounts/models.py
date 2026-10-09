@@ -19,5 +19,8 @@ class User(AbstractUser):
     def is_admin_role(self):
         return self.role == self.ROLE_ADMIN
 
+    def has_admin_access(self):
+        return self.is_superuser or self.is_admin_role()
+
     def is_user_role(self):
         return self.role == self.ROLE_USER

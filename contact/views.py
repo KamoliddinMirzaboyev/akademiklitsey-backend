@@ -1,6 +1,7 @@
 from rest_framework import generics, filters, status
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
@@ -8,7 +9,7 @@ from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-from accounts.permissions import IsAdminOrReadOnly
+from accounts.permissions import IsAdminUser
 from .models import ContactMessage
 from .serializers import (
     ContactMessageCreateSerializer,
@@ -51,6 +52,8 @@ class ContactPagination(PageNumberPagination):
 class ContactMessageCreateView(APIView):
     """Sayt tashrif buyuruvchilari uchun xabar yuborish"""
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'contact'
     
     @swagger_auto_schema(
         operation_summary="Xabar yuborish",
@@ -98,7 +101,7 @@ class ContactMessageCreateView(APIView):
 
 class ContactMessageListView(generics.ListAPIView):
     """Admin uchun barcha xabarlar ro'yxati"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUser]
     serializer_class = ContactMessageListSerializer
     pagination_class = ContactPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -134,7 +137,7 @@ class ContactMessageListView(generics.ListAPIView):
 
 class ContactMessageDetailView(APIView):
     """Admin uchun xabar detali, javob berish va status o'zgartirish"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUser]
     
     def get_object(self, pk):
         return get_object_or_404(
@@ -179,7 +182,7 @@ class ContactMessageDetailView(APIView):
 
 class ContactMessageReplyView(APIView):
     """Admin xabarga javob beradi"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUser]
     
     @swagger_auto_schema(
         operation_summary="Xabarga javob berish (Admin)",
@@ -215,7 +218,7 @@ class ContactMessageReplyView(APIView):
 
 class ContactMessageStatusView(APIView):
     """Admin xabar statusini o'zgartiradi"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUser]
     
     @swagger_auto_schema(
         operation_summary="Status o'zgartirish (Admin)",
@@ -246,7 +249,7 @@ class ContactMessageStatusView(APIView):
 
 class ContactMessageStatsView(APIView):
     """Admin uchun xabarlar statistikasi"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUser]
     
     @swagger_auto_schema(
         operation_summary="Xabarlar statistikasi (Admin)",

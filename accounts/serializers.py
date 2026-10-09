@@ -11,7 +11,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
 
-        data['role'] = self.user.role
+        data['role'] = User.ROLE_ADMIN if self.user.has_admin_access() else self.user.role
 
         return data
 

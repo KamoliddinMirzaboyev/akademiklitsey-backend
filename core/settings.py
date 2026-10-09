@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'django_filters',
 
     # apps
+    'core',
     'main',
     'accounts',
     'settings_app',
@@ -87,6 +88,10 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
     ],
+    'DEFAULT_THROTTLE_RATES': {
+        'login': env('LOGIN_THROTTLE_RATE', default='10/minute'),
+        'contact': env('CONTACT_THROTTLE_RATE', default='5/hour'),
+    },
 }
 
 SIMPLE_JWT = {
@@ -145,18 +150,18 @@ else:
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    # {
-    #     'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    # },
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
-    # {
-    #     'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    # },
-    # {
-    #     'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    # },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
 ]
 
 # Internationalization
@@ -172,7 +177,6 @@ LANGUAGES = [
 TIME_ZONE = 'Asia/Tashkent'
 
 USE_I18N = True
-USE_L10N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
@@ -181,21 +185,36 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / "static"]
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
+WHITENOISE_MANIFEST_STRICT = False
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Security settings — HTTPS va domain sozlangandan keyin yoqing
-# if not DEBUG:
-#     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-#     SECURE_SSL_REDIRECT = True
-#     SESSION_COOKIE_SECURE = True
-#     CSRF_COOKIE_SECURE = True
-#     SECURE_HSTS_SECONDS = 31536000
-#     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-#     SECURE_HSTS_PRELOAD = True
-#     SECURE_CONTENT_TYPE_NOSNIFF = True
+# Production xavfsizlik sozlamalari. Reverse proxy HTTPS sarlavhasini yuborsa,
+# USE_X_FORWARDED_PROTO=True (default productionda) qoldiriladi.
+if not DEBUG:
+    if env.bool('USE_X_FORWARDED_PROTO', default=True):
+        SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', default=False)
+    SESSION_COOKIE_SECURE = env.bool('SESSION_COOKIE_SECURE', default=False)
+    CSRF_COOKIE_SECURE = env.bool('CSRF_COOKIE_SECURE', default=False)
+    SECURE_HSTS_SECONDS = env.int('SECURE_HSTS_SECONDS', default=0)
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[
+    'http://api.fdtu1al.uz', 'https://api.fdtu1al.uz',
+    'http://fdtu1al.uz', 'https://fdtu1al.uz', 'https://www.fdtu1al.uz',
+    'http://169.58.12.251', 'http://169.58.12.251:8000', 'http://169.58.12.251:3000', 'http://169.58.12.251:3001'
+])
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

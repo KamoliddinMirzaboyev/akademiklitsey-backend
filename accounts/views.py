@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.throttling import ScopedRateThrottle
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .serializers import CustomTokenObtainPairSerializer, ChangePasswordSerializer
@@ -13,6 +14,8 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     """Javobida user rolini qo'shadigan maxsus token view"""
     permission_classes = (AllowAny,)
     serializer_class = CustomTokenObtainPairSerializer
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'login'
 
 
 class ChangePasswordView(APIView):

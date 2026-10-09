@@ -1,4 +1,4 @@
-﻿from rest_framework import serializers
+from rest_framework import serializers
 from .models import AdmissionInfo, AdmissionSubject, AdmissionDocument, FAQ, DarsJadvali
 from core.validators import validate_document
 
@@ -20,6 +20,8 @@ def build_translations(obj, fields):
 # в”Ђв”Ђв”Ђ AdmissionInfo в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 class AdmissionInfoSerializer(serializers.ModelSerializer):
+    online_apply_url = serializers.URLField(allow_blank=True, allow_null=True)
+
     class Meta:
         model = AdmissionInfo
         fields = [
@@ -32,6 +34,10 @@ class AdmissionInfoSerializer(serializers.ModelSerializer):
 
 
 class AdmissionInfoWriteSerializer(serializers.ModelSerializer):
+    online_apply_url = serializers.URLField(
+        required=False, allow_blank=True, allow_null=True
+    )
+
     class Meta:
         model = AdmissionInfo
         fields = [
