@@ -62,8 +62,8 @@ class Command(BaseCommand):
                 website="https://fdtual.uz",
                 established_year=1998,
                 telegram="https://t.me/fdtu1al_uz",
-                instagram="https://instagram.com/fdtu1al.uz",
-                facebook="https://facebook.com",
+                instagram="https://www.instagram.com/fdtu1al.uz?igsh=MWJuMTJtZ28zOTlxMg==",
+                facebook=None,
                 youtube="https://youtube.com",
             )
             self.stdout.write(self.style.SUCCESS("Sayt sozlamalari yaratildi."))
